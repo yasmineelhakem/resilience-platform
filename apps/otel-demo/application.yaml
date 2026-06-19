@@ -1,0 +1,37 @@
+# Documentation: https://opentelemetry.io/docs/platforms/kubernetes/helm/demo/
+# https://argo-cd.readthedocs.io/en/stable/user-guide/helm/
+
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: otel-demo
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://open-telemetry.github.io/opentelemetry-helm-charts
+    chart: opentelemetry-demo
+    targetRevision: "0.40.9"    
+    helm:
+      valueFiles:
+        - $values/apps/otel-demo/values.yaml
+  sources:
+    - repoURL: https://open-telemetry.github.io/opentelemetry-helm-charts
+      chart: opentelemetry-demo
+      targetRevision: "0.40.9"
+      helm:
+        valueFiles:
+          - $values/apps/otel-demo/values.yaml
+    - repoURL: https://github.com/yasmineelhakem/resilience-platform.git
+      targetRevision: main
+      ref: values
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: otel-demo
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+    
