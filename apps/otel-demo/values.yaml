@@ -28,7 +28,8 @@ default:
   revisionHistoryLimit: 10
   # Default schedulingRules for all components
   schedulingRules:
-    nodeSelector: {}
+    nodeSelector: 
+      platform-tier: workload
     affinity: {}
     tolerations: []
   # Default securityContext for all components

@@ -8,13 +8,6 @@ metadata:
   namespace: argocd
 spec:
   project: default
-  source:
-    repoURL: https://open-telemetry.github.io/opentelemetry-helm-charts
-    chart: opentelemetry-demo
-    targetRevision: "0.40.9"    
-    helm:
-      valueFiles:
-        - $values/apps/otel-demo/values.yaml
   sources:
     - repoURL: https://open-telemetry.github.io/opentelemetry-helm-charts
       chart: opentelemetry-demo
