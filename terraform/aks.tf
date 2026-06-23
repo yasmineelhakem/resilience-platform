@@ -28,6 +28,13 @@ resource "azurerm_kubernetes_cluster" "astro-cluster" {
     type = "SystemAssigned"
   }
 
+  network_profile {
+    network_plugin    = "azure"
+    network_policy    = "azure"
+    service_cidr      = "10.96.0.0/16"
+    dns_service_ip    = "10.96.0.10"
+  }
+   
 }
 
 resource "azurerm_kubernetes_cluster_node_pool" "workpool" {

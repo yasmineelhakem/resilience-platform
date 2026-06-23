@@ -37,7 +37,7 @@ variable "workpool_vm_size" {
 variable "workpool_node_count_min" {
   description = "Minimum nodes dedicated to running target applications."
   type        = number
-  default     = 2 
+  default     = 1
 }
 
 variable "workpool_node_count_max" {
