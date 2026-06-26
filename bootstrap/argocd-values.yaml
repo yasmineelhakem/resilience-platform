@@ -1,5 +1,5 @@
 # all ArgoCD components must land on syspool (default node),
-# which carries the CriticalAddonsOnly=true:NoSchedule taint.
+# which carries the CriticalAddonsOnly=true:NoSchedule taint
 
 global:
   tolerations:

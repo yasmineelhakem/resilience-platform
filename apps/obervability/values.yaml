@@ -1,0 +1,60 @@
+# scheduling observalitity stack on the workpool
+kube-prometheus-stack:
+
+  prometheus:
+    prometheusSpec:
+      nodeSelector:
+        platform-tier: workload
+
+      # Allow scraping ServiceMonitors and PodMonitors from all namespaces (otel demo ns ...)
+      serviceMonitorSelectorNilUsesHelmValues: false
+      podMonitorSelectorNilUsesHelmValues: false
+      ruleSelectorNilUsesHelmValues: false
+
+      retention: 7d     # prom keeps metrics for 7dyas
+      retentionSize: "8GB"   
+
+      resources:  
+        requests:
+          memory: 400Mi  # never let prom to exceed this
+          cpu: 100m
+        limits:
+          memory: 800Mi    
+
+      storageSpec: {}  # not to create pvc 
+
+  grafana:
+    nodeSelector:
+      platform-tier: workload
+
+    adminPassword: "admin"   
+
+    persistence:
+      enabled: false   # storing dashs in the pod, if pod dies, dashboards are lost.  
+
+    # lets you open dashboards without login
+    grafana.ini:
+      auth.anonymous:
+        enabled: true
+        org_role: Viewer
+
+    # dashboards can visualize both metrics and traces.
+    additionalDataSources:
+      - name: Jaeger
+        type: jaeger
+        url: http://otel-demo-jaeger-query.otel-demo.svc.cluster.local:16686
+        access: proxy
+        isDefault: false
+
+  alertmanager:
+    enabled: false           
+
+  # Each exporter exposes node metrics
+  nodeExporter:
+    enabled: true
+
+  # reports the desired and current state of Kubernetes resources
+  kubeStateMetrics:
+    enabled: true
+    nodeSelector:
+      platform-tier: workload
