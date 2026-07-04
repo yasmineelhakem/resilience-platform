@@ -1,64 +1,59 @@
 # scheduling observalitity stack on the workpool
-kube-prometheus-stack:
 
-  prometheus:
-    prometheusSpec:
-      nodeSelector:
-        platform-tier: workload
-
-      # Allow scraping ServiceMonitors and PodMonitors from all namespaces (otel demo ns ...)
-      serviceMonitorSelectorNilUsesHelmValues: false
-      podMonitorSelectorNilUsesHelmValues: false
-      ruleSelectorNilUsesHelmValues: false
-
-      retention: 7d     # prom keeps metrics for 7dyas
-      retentionSize: "8GB"   
-
-      resources:  
-        requests:
-          memory: 400Mi  # never let prom to exceed this
-          cpu: 100m
-        limits:
-          memory: 800Mi    
-
-      storageSpec: {}  # not to create pvc 
-
-  grafana:
+prometheus:
+  prometheusSpec:
     nodeSelector:
       platform-tier: workload
 
-    adminPassword: "admin"   
+    # Allow scraping ServiceMonitors and PodMonitors from all namespaces (otel demo ns ...)
+    serviceMonitorSelectorNilUsesHelmValues: false
+    podMonitorSelectorNilUsesHelmValues: false
+    ruleSelectorNilUsesHelmValues: false
 
-    persistence:
-      enabled: false   # storing dashs in the pod, if pod dies, dashboards are lost.  
+    retention: 7d     # prom keeps metrics for 7dyas
+    retentionSize: "8GB"   
 
-    # lets you open dashboards without login
-    grafana.ini:
-      auth.anonymous:
-        enabled: true
-        org_role: Viewer
+    resources:  
+      requests:
+        memory: 400Mi  # never let prom to exceed this
+        cpu: 100m
+      limits:
+        memory: 800Mi    
 
-    # dashboards can visualize both metrics and traces.
-    additionalDataSources:
-      - name: Jaeger
-        type: jaeger
-        url: http://otel-demo-jaeger-query.otel-demo.svc.cluster.local:16686
-        access: proxy
-        isDefault: false
+    storageSpec: {}  # not to create pvc 
 
-  alertmanager:
-    enabled: false           
+grafana:
+  nodeSelector:
+    platform-tier: workload
 
-  prometheus-node-exporter:
-    nodeSelector:
-      platform-tier: workload
-    tolerations:
-      - key: "CriticalAddonsOnly"
-        operator: "Exists"
-        effect: "NoSchedule"
+  adminPassword: "admin"   
 
-  # reports the desired and current state of Kubernetes resources
-  kubeStateMetrics:
-    enabled: true
-    nodeSelector:
-      platform-tier: workload
+  persistence:
+    enabled: false   # storing dashs in the pod, if pod dies, dashboards are lost.  
+
+  # lets you open dashboards without login
+  grafana.ini:
+    auth.anonymous:
+      enabled: true
+      org_role: Viewer
+
+  # dashboards can visualize both metrics and traces.
+  additionalDataSources:
+    - name: Jaeger
+      type: jaeger
+      url: http://otel-demo-jaeger-query.otel-demo.svc.cluster.local:16686
+      access: proxy
+      isDefault: false
+
+alertmanager:
+  enabled: false           
+
+prometheus-node-exporter:
+  nodeSelector:
+    platform-tier: workload
+
+# reports the desired and current state of Kubernetes resources
+kubeStateMetrics:
+  enabled: true
+  nodeSelector:
+    platform-tier: workload
