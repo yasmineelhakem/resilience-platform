@@ -49,11 +49,9 @@ kube-prometheus-stack:
   alertmanager:
     enabled: false           
 
-  nodeExporter:
-    enabled: false
-
   prometheus-node-exporter:
-    enabled: true
+    nodeSelector:
+      platform-tier: workload
     tolerations:
       - key: "CriticalAddonsOnly"
         operator: "Exists"
