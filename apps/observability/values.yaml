@@ -49,9 +49,15 @@ kube-prometheus-stack:
   alertmanager:
     enabled: false           
 
-  # Each exporter exposes node metrics
   nodeExporter:
+    enabled: false
+
+  prometheus-node-exporter:
     enabled: true
+    tolerations:
+      - key: "CriticalAddonsOnly"
+        operator: "Exists"
+        effect: "NoSchedule"
 
   # reports the desired and current state of Kubernetes resources
   kubeStateMetrics:
