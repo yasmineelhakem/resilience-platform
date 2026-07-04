@@ -1,3 +1,4 @@
+# Documentation: https://github.com/prometheus-community/helm-charts/blob/main/charts/kube-prometheus-stack/values.yaml
 # scheduling observalitity stack on the workpool
 
 prometheus:
@@ -49,11 +50,11 @@ alertmanager:
   enabled: false           
 
 prometheus-node-exporter:
-  nodeSelector:
-    platform-tier: workload
+  affinity: {}
+  tolerations:
+    - operator: "Exists"
 
 # reports the desired and current state of Kubernetes resources
-kubeStateMetrics:
-  enabled: true
+kube-state-metrics:
   nodeSelector:
     platform-tier: workload

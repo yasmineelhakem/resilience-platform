@@ -46,6 +46,7 @@ resource "azurerm_kubernetes_cluster_node_pool" "workpool" {
   auto_scaling_enabled = true
   min_count             = var.workpool_node_count_min
   max_count             = var.workpool_node_count_max
+  max_pods             = 60
 
   priority        = "Regular" 
   os_disk_size_gb = 100
