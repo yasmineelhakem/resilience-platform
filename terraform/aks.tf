@@ -7,7 +7,9 @@ resource "azurerm_kubernetes_cluster" "astro-cluster" {
   resource_group_name = azurerm_resource_group.astro-rg.name
   dns_prefix          = "astroaks1"
   sku_tier            = "Free" 
-
+  
+  oidc_issuer_enabled = true
+  
   default_node_pool {
     name       = "default"
     vm_size    = var.node_vm_size

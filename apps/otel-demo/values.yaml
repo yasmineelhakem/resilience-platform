@@ -956,7 +956,7 @@ opentelemetry-collector:
         sending_queue:
           batch: {}
       otlphttp/prometheus:
-        endpoint: http://kube-prometheus-stack-prometheus.observability.svc.cluster.local:9090/api/v1/otlp
+        endpoint: http://prometheus-stack-prometheus.observability.svc.cluster.local:9090/api/v1/otlp
         tls:
           insecure: true
         sending_queue:
@@ -1114,118 +1114,10 @@ jaeger:
         trace_storage: memory_backend
 
 prometheus:
-  enabled: true
-  alertmanager:
-    enabled: false
-  configmapReload:
-    prometheus:
-      enabled: false
-  kube-state-metrics:
-    enabled: false
-  prometheus-node-exporter:
-    enabled: false
-  prometheus-pushgateway:
-    enabled: false
-  server:
-    fullnameOverride: prometheus
-    extraFlags:
-      - "enable-feature=exemplar-storage"
-      - "web.enable-otlp-receiver"
-    retention: 7d
-    tsdb:
-      out_of_order_time_window: 30m
-    otlp:
-      keep_identifying_resource_attributes: true
-      # Recommended attributes to be promoted to labels.
-      promote_resource_attributes:
-        - service.instance.id
-        - service.name
-        - service.namespace
-        - service.version
-        - cloud.availability_zone
-        - cloud.region
-        - deployment.environment.name
-        # When deploying on Kubernetes, resource attributes used to identify the
-        # kubernetes resources in dashboards and alerts.
-        - k8s.cluster.name
-        - k8s.container.name
-        - k8s.cronjob.name
-        - k8s.daemonset.name
-        - k8s.deployment.name
-        - k8s.job.name
-        - k8s.namespace.name
-        - k8s.node.name
-        - k8s.pod.name
-        - k8s.replicaset.name
-        - k8s.statefulset.name
-        - container.name
-        # When deploying on VMs, resource attributes used to identify
-        # the host in dashboards and alerts.
-        - host.name
-        # PostgreSQL resource attributes produced by the OTel Collector PostgreSQL receiver
-        # and used in dashboards and alerts.
-        # See https://github.com/open-telemetry/opentelemetry-collector-contrib/blob/main/receiver/postgresqlreceiver/metadata.yaml
-        - postgresql.database.name
-        - postgresql.schema.name
-        - postgresql.table.name
-        - postgresql.index.name
-    persistentVolume:
-      enabled: false
-    service:
-      servicePort: 9090
-    resources:
-      limits:
-        memory: 400Mi
+  enabled: false
 
 grafana:
-  enabled: true
-  fullnameOverride: grafana
-  testFramework:
-    enabled: false
-  grafana.ini:
-    auth:
-      disable_login_form: true
-    auth.anonymous:
-      enabled: true
-      org_name: Main Org.
-      org_role: Admin
-    server:
-      root_url: "%(protocol)s://%(domain)s:%(http_port)s/grafana"
-      serve_from_sub_path: true
-  adminPassword: admin
-  plugins:
-    - grafana-opensearch-datasource
-  sidecar:
-    alerts:
-      enabled: true
-    dashboards:
-      enabled: true
-    datasources:
-      enabled: true
-    resources:
-      limits:
-        cpu: 150m
-        memory: 256Mi
-  resources:
-    limits:
-      memory: 300Mi
+  enabled: false
 
 opensearch:
   enabled: false
-  fullnameOverride: opensearch
-  clusterName: demo-cluster
-  nodeGroup: otel-demo
-  singleNode: true
-  opensearchJavaOpts: "-Xms400m -Xmx400m"
-  persistence:
-    enabled: false
-  extraEnvs:
-    - name: "bootstrap.memory_lock"
-      value: "true"
-    - name: "DISABLE_INSTALL_DEMO_CONFIG"
-      value: "true"
-    - name: "DISABLE_SECURITY_PLUGIN"
-      value: "true"
-  resources:
-    limits:
-      memory: 1100Mi
