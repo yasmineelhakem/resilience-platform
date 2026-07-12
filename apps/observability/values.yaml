@@ -23,6 +23,10 @@ prometheus:
 
     storageSpec: {}  # not to create pvc 
 
+    additionalArgs:
+      - name: "web.enable-otlp-receiver"
+        value: ""
+
 grafana:
   nodeSelector:
     platform-tier: workload
