@@ -1,0 +1,22 @@
+# Chaos Mesh must land on syspool 
+controllerManager:
+  nodeSelector:
+    platform-tier: control-plane
+  tolerations:
+    - key: "CriticalAddonsOnly"
+      operator: "Exists"
+      effect: "NoSchedule"
+
+# chaosDaemon is a DaemonSet needs to run on workpool to inject faults into workload pods
+chaosDaemon:
+  runtime: containerd
+  socketPath: /run/containerd/containerd.sock
+  tolerations:
+    - key: "CriticalAddonsOnly"
+      operator: "Exists"
+      effect: "NoSchedule"
+
+dashboard:
+  nodeSelector:
+    platform-tier: workload
+  securityMode: false   # disables auth for easy access during development

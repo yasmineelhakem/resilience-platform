@@ -1,0 +1,30 @@
+# Documentation: https://chaos-mesh.org/docs/production-installation-using-helm/
+# https://github.com/chaos-mesh/chaos-mesh
+
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: chaos-mesh
+  namespace: argocd
+spec:
+  project: default
+  sources:
+    - repoURL: https://charts.chaos-mesh.org
+      chart: chaos-mesh
+      targetRevision: "2.8.3"
+      helm:
+        valueFiles:
+          - $values/apps/chaos-mesh/values.yaml
+    - repoURL: https://github.com/yasmineelhakem/resilience-platform.git
+      targetRevision: main
+      ref: values
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: chaos-mesh
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
