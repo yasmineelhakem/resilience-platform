@@ -1,0 +1,20 @@
+# Documentation: https://chaos-mesh.org/docs/simulate-heavy-stress-on-kubernetes/
+# Simulate a frontend service under heavy cpu load
+
+apiVersion: chaos-mesh.org/v1alpha1
+kind: StressChaos
+metadata:
+  name: frontend-cpu-stress
+  namespace: chaos-mesh
+spec:
+  mode: one
+  selector:
+    namespaces:
+      - otel-demo
+    labelSelectors:
+      app.kubernetes.io/name: frontend
+  stressors:
+    cpu:
+      workers: 2 # create 2 workers to stress the CPU
+      load: 80 # consumes 80% of cpu resources
+  duration: "2m"
