@@ -12,7 +12,7 @@ spec:
     namespaces:
       - otel-demo
     labelSelectors:
-      app.kubernetes.io/name: checkoutservice
+      app.kubernetes.io/name: checkout
   direction: to
   target:
     mode: all
@@ -20,4 +20,4 @@ spec:
       namespaces:
         - otel-demo
       labelSelectors:
-        app.kubernetes.io/name: paymentservice
+        app.kubernetes.io/name: payment

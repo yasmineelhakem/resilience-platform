@@ -21,7 +21,7 @@ spec:
       namespaces:
         - otel-demo
       labelSelectors:
-        app.kubernetes.io/name: productcatalogservice
+        app.kubernetes.io/name: product-catalog
   delay:
     latency: "500ms"
     correlation: "100"

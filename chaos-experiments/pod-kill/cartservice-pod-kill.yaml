@@ -11,4 +11,4 @@ spec:
     namespaces:
       - otel-demo
     labelSelectors:
-      'app.kubernetes.io/component': cartservice
+      'app.kubernetes.io/component': cart
