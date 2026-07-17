@@ -1,0 +1,15 @@
+# Dependency failure experiment
+# simulate payment Service unavailability to evaluate checkout Service resilience.
+apiVersion: chaos-mesh.org/v1alpha1
+kind: PodChaos
+metadata:
+  name: payment-pod-kill
+  namespace: chaos-mesh
+spec:
+  action: pod-kill
+  mode: one
+  selector:
+    namespaces:
+      - otel-demo
+    labelSelectors:
+      'app.kubernetes.io/component': payment
