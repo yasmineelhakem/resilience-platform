@@ -113,16 +113,16 @@ Get the Argo CD server IP address:
 kubectl get svc argocd-server -n argocd -o=jsonpath='{.status.loadBalancer.ingress[0].ip}'
 ```
 
-Login to Argo CD:
-
-```bash
-argocd login <ARGOCD_SERVER_IP> --username admin --insecure
-```
-
 Get the initial admin password:
 
 ```bash
 argocd admin initial-password -n argocd
+```
+
+Login to Argo CD:
+
+```bash
+argocd login <ARGOCD_SERVER_IP> --username admin --insecure
 ```
 
 ## 6. Connect GitHub to Argo CD
@@ -172,4 +172,71 @@ Check the Argo CD application list:
 
 ```bash
 argocd app list
+```
+
+## 8. Access the Deployed Endpoints
+
+After the applications are deployed, you can access them locally using port-forwarding.
+
+### OTel Demo UI
+
+```bash
+kubectl -n otel-demo port-forward svc/frontend-proxy 8080:8080
+```
+
+Open:
+
+```text
+http://localhost:8080
+```
+
+### Prometheus
+
+```bash
+kubectl -n observability port-forward svc/kube-prometheus-stack-prometheus 9090:9090
+```
+
+Open:
+
+```text
+http://localhost:9090
+```
+
+### Grafana
+
+```bash
+kubectl -n observability port-forward svc/kube-prometheus-stack-grafana 3000:80
+```
+
+Open:
+
+```text
+http://localhost:3000/
+```
+
+Default credentials:
+
+```text
+Username: admin
+Password: admin
+```
+
+### Chaos Mesh Dashboard
+
+```bash
+kubectl -n chaos-mesh port-forward svc/chaos-dashboard 2333:2333
+```
+
+Open:
+
+```text
+http://localhost:2333
+```
+
+### Jaeger UI
+
+The Jaeger UI is available through the OTel Demo frontend:
+
+```text
+http://localhost:8080/jaeger/ui
 ```
