@@ -1,0 +1,11 @@
+# kustomization.yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: observability
+configMapGenerator:
+  - name: grafana-dashboard-baseline-health
+    files:
+      - baseline-health.json
+    options:
+      labels:
+        grafana_dashboard: "1"

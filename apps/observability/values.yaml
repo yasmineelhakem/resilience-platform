@@ -41,6 +41,13 @@ grafana:
     auth.anonymous:
       enabled: true
       org_role: Viewer
+  
+  sidecar:
+    dashboards:
+      enabled: true
+      label: grafana_dashboard
+      labelValue: "1"
+      searchNamespace: ALL
 
   # dashboards can visualize both metrics and traces.
   additionalDataSources:

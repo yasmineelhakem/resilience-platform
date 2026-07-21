@@ -17,6 +17,9 @@ spec:
     - repoURL: https://github.com/yasmineelhakem/resilience-platform.git
       targetRevision: main
       ref: values
+    - repoURL: https://github.com/yasmineelhakem/resilience-platform.git
+      targetRevision: main
+      path: apps/observability/dashboards
   destination:
     server: https://kubernetes.default.svc
     namespace: observability
