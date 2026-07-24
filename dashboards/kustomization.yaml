@@ -6,7 +6,7 @@ namespace: observability
 configMapGenerator:
   - name: grafana-dashboard-baseline-health
     files:
-      - basline-health.json
+      - Service-Health.json
     options:
       labels:
         grafana_dashboard: "1"

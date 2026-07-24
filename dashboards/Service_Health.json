@@ -18,7 +18,7 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "id": 28,
+  "id": 1,
   "links": [],
   "panels": [
     {
@@ -327,8 +327,8 @@
   },
   "timepicker": {},
   "timezone": "browser",
-  "title": "Service Health Baseline",
+  "title": "Service Health | RED Method",
   "uid": "dfss7qt4h61vkf",
-  "version": 5,
+  "version": 1,
   "weekStart": ""
 }
