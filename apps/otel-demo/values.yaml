@@ -471,7 +471,7 @@ components:
       runAsNonRoot: true
 
   image-provider:
-    enabled: false
+    enabled: true
     useDefault:
       env: true
     service:
