@@ -15,8 +15,5 @@ spec:
     server: https://kubernetes.default.svc
     namespace: otel-demo
   syncPolicy:
-    automated:
-      prune: true
-      selfHeal: false
     syncOptions:
       - CreateNamespace=true
