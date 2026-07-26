@@ -21,3 +21,4 @@ spec:
         - otel-demo
       labelSelectors:
         app.kubernetes.io/name: payment
+  duration: "2m"
