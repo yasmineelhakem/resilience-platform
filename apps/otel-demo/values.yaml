@@ -185,7 +185,7 @@ components:
         value: "false"
     resources:
       limits:
-        memory: 120Mi
+        memory: 200Mi
     initContainers:
       - name: wait-for-kafka
         image: busybox:latest
@@ -586,7 +586,7 @@ components:
         value: http://$(OTEL_COLLECTOR_NAME):4317
     resources:
       limits:
-        memory: 20Mi
+        memory: 60Mi
 
   product-reviews:
     enabled: true
