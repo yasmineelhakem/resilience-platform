@@ -227,6 +227,7 @@
         "type": "prometheus",
         "uid": "prometheus"
       },
+      "description": "excludes non-HTTP/consumer services (accounting, fraud-detection, kafka)",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -305,7 +306,7 @@
       "targets": [
         {
           "editorMode": "code",
-          "expr": "histogram_quantile(0.99,\r\n  sum by (service_name, le) (\r\n    rate(traces_span_metrics_duration_milliseconds_bucket{\r\n     job=~\"otel-demo/.*\"\r\n    }[5m])\r\n  )\r\n)",
+          "expr": "histogram_quantile(0.99,\r\n  sum(rate(traces_span_metrics_duration_milliseconds_bucket{\r\n    service_name!~\"accounting|fraud-detection|kafka\"\r\n  }[5m])) by (le, service_name)\r\n)",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
@@ -329,6 +330,6 @@
   "timezone": "browser",
   "title": "Service Health / RED Method",
   "uid": "dfss7qt4h61vkf",
-  "version": 1,
+  "version": 2,
   "weekStart": ""
 }
