@@ -8,6 +8,7 @@ metadata:
 spec:
   action: pod-kill
   mode: one
+  duration: '2m'
   selector:
     namespaces:
       - otel-demo
