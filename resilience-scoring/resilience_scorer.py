@@ -4,7 +4,9 @@ import argparse
 import json
 import subprocess
 from datetime import datetime, timezone, timedelta
+import requests
 
+PROMETHEUS_URL = "http://localhost:9090"
 
 def parse_timestamp(timestamp: str) -> datetime:
     """Convert Kubernetes timestamp into a Python datetime."""
@@ -104,23 +106,71 @@ def get_pod_lifecycle_mttr(namespace: str, label_selector: str, fault_start: dat
 
     return round(mttr_seconds, 1), replacement["metadata"]["name"], ready_time
 
+def get_p99_latency_series(service_name: str, start: datetime, end: datetime, step="5s"):
+    query = (
+        f'histogram_quantile(0.99, sum(rate(traces_span_metrics_duration_milliseconds_bucket'
+        f'{{service_name="{service_name}"}}[3m])) by (le))'
+    )
+    resp = requests.get(f"{PROMETHEUS_URL}/api/v1/query_range", params={
+        "query": query,
+        "start": start.timestamp(),
+        "end": end.timestamp(),
+        "step": step,
+    })
+    resp.raise_for_status()
+    result = resp.json()["data"]["result"]
+    if not result:
+        return []
+    return [(float(t), float(v)) for t, v in result[0]["values"]]
+
+
+def get_baseline_p99(service_name: str, fault_start: datetime, baseline_seconds=300):
+    baseline_start = fault_start - timedelta(seconds=baseline_seconds)
+    series = get_p99_latency_series(service_name, baseline_start, fault_start, step="15s")
+    vals = [v for _, v in series if v is not None]
+    return sum(vals) / len(vals) if vals else None
+
+
+def get_latency_mttr(service_name: str, fault_start: datetime, observation_end: datetime,
+                      tolerance=1.2, sustain_seconds=30, step_seconds=5):
+    """
+    MTTR = time from fault_start until p99 latency drops back to within
+    """
+    baseline = get_baseline_p99(service_name, fault_start)
+    if baseline is None or baseline == 0:
+        return None, None
+
+    threshold = baseline * tolerance
+    series = get_p99_latency_series(service_name, fault_start, observation_end, step=f"{step_seconds}s")
+    if not series:
+        return None, baseline
+
+    sustain_samples_needed = sustain_seconds // step_seconds
+    consecutive_ok = 0
+    for i, (ts, val) in enumerate(series):
+        if val is not None and val <= threshold:
+            consecutive_ok += 1
+            if consecutive_ok >= sustain_samples_needed:
+                recovery_ts = series[i - sustain_samples_needed + 1][0]
+                return round(recovery_ts - fault_start.timestamp(), 1), round(baseline, 1)
+        else:
+            consecutive_ok = 0
+    return None, round(baseline, 1)
+
 def main():
-
     parser = argparse.ArgumentParser()
-
     parser.add_argument("--chaos-kind", required=True)
     parser.add_argument("--chaos-name", required=True)
-    parser.add_argument(
-        "--chaos-namespace",
-        default="chaos-mesh",
-    )
+    parser.add_argument("--chaos-namespace", default="chaos-mesh")
+    parser.add_argument("--observation-window", type=int, default=300)
 
-    parser.add_argument(
-        "--observation-window",
-        type=int,
-        default=300,
-        help="Observation window in seconds",
-    )
+    # the service actually being killed (for pod-lifecycle MTTR)
+    parser.add_argument("--target-component", required=True,
+                         help="Value of app.kubernetes.io/component for the killed pod, e.g. cart or payment")
+
+    # the downstream service to measure latency impact on (for dependency MTTR)
+    parser.add_argument("--downstream-service", default=None,
+                         help="Service to check for latency degradation, e.g. checkout. Omit to skip.")
 
     args = parser.parse_args()
 
@@ -135,20 +185,25 @@ def main():
     print("----------------------------")
     print(f"Fault start     : {fault_start}")
     print(f"Observation end : {observation_end}")
-    print(
-        f"Window length   : {(observation_end - fault_start).total_seconds()} seconds"
-    )
+    print(f"Window length   : {(observation_end - fault_start).total_seconds()} seconds")
 
     mttr, pod_name, ready_time = get_pod_lifecycle_mttr(
         namespace="otel-demo",
-        label_selector="app.kubernetes.io/component=cart",
+        label_selector=f"app.kubernetes.io/component={args.target_component}",
         fault_start=fault_start,
     )
-    print(f"\nPod-lifecycle MTTR")
+    print(f"\nPod-lifecycle MTTR ({args.target_component})")
     print("----------------------------")
     print(f"Replacement pod : {pod_name}")
     print(f"Ready at        : {ready_time}")
     print(f"MTTR            : {mttr} seconds")
+
+    if args.downstream_service:
+        mttr, baseline = get_latency_mttr(args.downstream_service, fault_start, observation_end)
+        print(f"\nLatency-based MTTR for dependency failure ({args.downstream_service})")
+        print("----------------------------")
+        print(f"Baseline p99    : {baseline} ms")
+        print(f"MTTR            : {mttr} seconds")
 
 
 if __name__ == "__main__":
