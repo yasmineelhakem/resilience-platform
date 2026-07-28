@@ -813,7 +813,7 @@ components:
       runAsNonRoot: true
 
   llm:
-    enabled: false
+    enabled: true
     useDefault:
       env: true
     service:
