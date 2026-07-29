@@ -14,7 +14,7 @@ spec:
       - otel-demo
     labelSelectors:
       app.kubernetes.io/name: frontend
-  direction: to
+  direction: both
   target:
     mode: all
     selector:
