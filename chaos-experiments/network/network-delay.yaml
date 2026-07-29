@@ -23,7 +23,7 @@ spec:
       labelSelectors:
         app.kubernetes.io/name: product-catalog
   delay:
-    latency: "500ms"
+    latency: "3000ms"
     correlation: "100"
-    jitter: "0ms"
-  duration: "2m"
+    jitter: "100ms"
+  duration: "3m"
