@@ -63,3 +63,63 @@ def get_baseline_p99(service_name: str, fault_start: datetime, baseline_seconds=
         return default_fallback
 
     return sum(valid_vals) / len(valid_vals)
+
+def get_container_cpu_series(pod_prefix: str, namespace: str, start: datetime, end: datetime, step="5s"):
+    """
+    Retrieves container CPU rate (in cores) for pods matching a prefix.
+    """
+    query = f'sum(rate(container_cpu_usage_seconds_total{{namespace="{namespace}", pod=~"{pod_prefix}-.*", container!=""}}[2m])) or vector(0)'
+    
+    resp = requests.get(
+        f"{PROMETHEUS_URL}/api/v1/query_range",
+        params={
+            "query": query,
+            "start": start.timestamp(),
+            "end": end.timestamp(),
+            "step": step,
+        },
+    )
+    resp.raise_for_status()
+    result = resp.json()["data"]["result"]
+    if not result:
+        return []
+
+    parsed_series = []
+    for t, v in result[0]["values"]:
+        val = float(v) if v is not None else 0.0
+        if math.isnan(val):
+            val = 0.0
+        parsed_series.append((float(t), val))
+
+    return parsed_series
+
+
+def get_container_memory_series(pod_prefix: str, namespace: str, start: datetime, end: datetime, step="5s"):
+    """
+    Retrieves container memory RSS (in MB) for pods matching a prefix.
+    Using RSS prevents cache-flush baseline shifts during memory chaos.
+    """
+    query = f'sum(container_memory_rss{{namespace="{namespace}", pod=~"{pod_prefix}-.*", container!=""}}) / (1024 * 1024)'
+    
+    resp = requests.get(
+        f"{PROMETHEUS_URL}/api/v1/query_range",
+        params={
+            "query": query,
+            "start": start.timestamp(),
+            "end": end.timestamp(),
+            "step": step,
+        },
+    )
+    resp.raise_for_status()
+    result = resp.json()["data"]["result"]
+    if not result:
+        return []
+
+    parsed_series = []
+    for t, v in result[0]["values"]:
+        val = float(v) if v is not None else 0.0
+        if math.isnan(val):
+            val = 0.0
+        parsed_series.append((float(t), val))
+
+    return parsed_series

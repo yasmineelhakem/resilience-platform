@@ -4,7 +4,12 @@ import argparse
 from datetime import timedelta
 
 from chaos_window import get_observation_window
-from mttr import get_pod_lifecycle_mttr, get_latency_mttr
+from mttr import (
+    get_pod_lifecycle_mttr,
+    get_latency_mttr,
+    get_cpu_stress_mttr,
+    get_memory_stress_mttr,
+)
 
 
 def main():
@@ -23,7 +28,7 @@ def main():
     parser.add_argument(
         "--downstream-service",
         default=None,
-        help="Service to check for latency degradation, e.g. checkout. Omit to skip.",
+        help="Service to check for latency degradation or stress MTTR, e.g. frontend. Omit to skip.",
     )
 
     args = parser.parse_args()
@@ -41,6 +46,7 @@ def main():
     print(f"Observation end : {observation_end}")
     print(f"Window length   : {(observation_end - fault_start).total_seconds()} seconds")
 
+    # 1. Pod Lifecycle MTTR (PodKill / PodFailure)
     if args.target_component:
         try:
             mttr_pod, pod_name, ready_time = get_pod_lifecycle_mttr(
@@ -58,7 +64,35 @@ def main():
     else:
         print("\nPod-lifecycle MTTR skipped: no --target-component provided.")
 
-    if args.downstream_service:
+    # 2. Stress Chaos MTTR (StressChaos)
+    if args.chaos_kind == "StressChaos" and args.downstream_service:
+        print(f"\nStress Chaos MTTR ({args.downstream_service})")
+        print("----------------------------")
+        
+        # CPU Stress
+        if "cpu" in args.chaos_name.lower():
+            mttr_cpu, peak_cpu = get_cpu_stress_mttr(
+                pod_prefix=args.downstream_service,
+                fault_start=fault_start,
+                observation_end=observation_end,
+            )
+            print(f"Stress Type     : CPU")
+            print(f"Peak CPU Usage  : {peak_cpu} cores")
+            print(f"MTTR            : {mttr_cpu} seconds")
+
+        # Memory Stress
+        elif "memory" in args.chaos_name.lower() or "mem" in args.chaos_name.lower():
+            mttr_mem, peak_mem = get_memory_stress_mttr(
+                pod_prefix=args.downstream_service,
+                fault_start=fault_start,
+                observation_end=observation_end,
+            )
+            print(f"Stress Type     : Memory")
+            print(f"Peak Memory     : {peak_mem} MB")
+            print(f"MTTR            : {mttr_mem} seconds")
+
+    # 3. Latency MTTR (NetworkChaos / HTTP Chaos)
+    elif args.downstream_service:
         mttr_latency, baseline = get_latency_mttr(
             args.downstream_service, fault_start, observation_end
         )
