@@ -16,8 +16,8 @@ def main():
 
     parser.add_argument(
         "--target-component",
-        required=True,
-        help="Value of app.kubernetes.io/component for the killed pod, e.g. cart or payment",
+        default=None,
+        help="Value of app.kubernetes.io/component, for pod-lifecycle MTTR. Omit if nothing is killed.",
     )
 
     parser.add_argument(
@@ -41,17 +41,22 @@ def main():
     print(f"Observation end : {observation_end}")
     print(f"Window length   : {(observation_end - fault_start).total_seconds()} seconds")
 
-    mttr_pod, pod_name, ready_time = get_pod_lifecycle_mttr(
-        namespace="otel-demo",
-        label_selector=f"app.kubernetes.io/component={args.target_component}",
-        fault_start=fault_start,
-    )
-
-    print(f"\nPod-lifecycle MTTR ({args.target_component})")
-    print("----------------------------")
-    print(f"Replacement pod : {pod_name}")
-    print(f"Ready at        : {ready_time}")
-    print(f"MTTR            : {mttr_pod} seconds")
+    if args.target_component:
+        try:
+            mttr_pod, pod_name, ready_time = get_pod_lifecycle_mttr(
+                namespace="otel-demo",
+                label_selector=f"app.kubernetes.io/component={args.target_component}",
+                fault_start=fault_start,
+            )
+            print(f"\nPod-lifecycle MTTR ({args.target_component})")
+            print("----------------------------")
+            print(f"Replacement pod : {pod_name}")
+            print(f"Ready at        : {ready_time}")
+            print(f"MTTR            : {mttr_pod} seconds")
+        except RuntimeError as exc:
+            print(f"\nPod-lifecycle MTTR skipped: {exc}")
+    else:
+        print("\nPod-lifecycle MTTR skipped: no --target-component provided.")
 
     if args.downstream_service:
         mttr_latency, baseline = get_latency_mttr(

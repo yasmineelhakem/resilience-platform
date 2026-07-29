@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import json
+import math
 import subprocess
 from datetime import datetime
 from typing import Optional, Tuple
@@ -62,12 +63,25 @@ def get_latency_mttr(service_name: str, fault_start: datetime, observation_end: 
 
     sustain_samples_needed = sustain_seconds // step_seconds
     consecutive_ok = 0
+    fault_detected = False  # Track if latency spiked above threshold first
+
     for i, (ts, val) in enumerate(series):
-        if val is not None and val <= threshold:
+        # Ignore empty or NaN samples
+        if val is None or math.isnan(val):
+            continue
+
+        # Detect that the latency fault has actually started
+        if val > threshold:
+            fault_detected = True
+            consecutive_ok = 0
+            continue
+
+        # Only evaluate recovery if we previously registered the fault spike
+        if fault_detected and val <= threshold:
             consecutive_ok += 1
             if consecutive_ok >= sustain_samples_needed:
                 recovery_ts = series[i - sustain_samples_needed + 1][0]
-                return round(recovery_ts - fault_start.timestamp(), 1), round(baseline, 1)
-        else:
-            consecutive_ok = 0
+                mttr = recovery_ts - fault_start.timestamp()
+                return round(max(0.0, mttr), 1), round(baseline, 1)
+
     return None, round(baseline, 1)
