@@ -13,7 +13,7 @@ spec:
       - otel-demo
     labelSelectors:
       app.kubernetes.io/name: checkout
-  direction: to
+  direction: both
   target:
     mode: all
     selector:
