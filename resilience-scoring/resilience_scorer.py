@@ -10,6 +10,8 @@ from mttr import (
     get_cpu_stress_mttr,
     get_memory_stress_mttr,
 )
+from metrics import get_request_availability
+from scorer import compute_resilience_score, calculate_burn_rate
 
 
 def main():
@@ -22,13 +24,13 @@ def main():
     parser.add_argument(
         "--target-component",
         default=None,
-        help="Value of app.kubernetes.io/component, for pod-lifecycle MTTR. Omit if nothing is killed.",
+        help="Value of app.kubernetes.io/component, for pod-lifecycle MTTR.",
     )
 
     parser.add_argument(
         "--downstream-service",
         default=None,
-        help="Service to check for latency degradation or stress MTTR, e.g. frontend. Omit to skip.",
+        help="Service to check for metrics, e.g., frontend.",
     )
 
     args = parser.parse_args()
@@ -46,10 +48,12 @@ def main():
     print(f"Observation end : {observation_end}")
     print(f"Window length   : {(observation_end - fault_start).total_seconds()} seconds")
 
-    # 1. Pod Lifecycle MTTR (PodKill / PodFailure)
+    mttr_value = None
+
+    # 1. Pod Lifecycle MTTR
     if args.target_component:
         try:
-            mttr_pod, pod_name, ready_time = get_pod_lifecycle_mttr(
+            mttr_value, pod_name, ready_time = get_pod_lifecycle_mttr(
                 namespace="otel-demo",
                 label_selector=f"app.kubernetes.io/component={args.target_component}",
                 fault_start=fault_start,
@@ -58,48 +62,65 @@ def main():
             print("----------------------------")
             print(f"Replacement pod : {pod_name}")
             print(f"Ready at        : {ready_time}")
-            print(f"MTTR            : {mttr_pod} seconds")
+            print(f"MTTR            : {mttr_value} seconds")
         except RuntimeError as exc:
             print(f"\nPod-lifecycle MTTR skipped: {exc}")
-    else:
-        print("\nPod-lifecycle MTTR skipped: no --target-component provided.")
 
-    # 2. Stress Chaos MTTR (StressChaos)
-    if args.chaos_kind == "StressChaos" and args.downstream_service:
+    # 2. Stress Chaos MTTR
+    elif args.chaos_kind == "StressChaos" and args.downstream_service:
         print(f"\nStress Chaos MTTR ({args.downstream_service})")
         print("----------------------------")
-        
-        # CPU Stress
         if "cpu" in args.chaos_name.lower():
-            mttr_cpu, peak_cpu = get_cpu_stress_mttr(
+            mttr_value, peak_val = get_cpu_stress_mttr(
                 pod_prefix=args.downstream_service,
                 fault_start=fault_start,
                 observation_end=observation_end,
             )
             print(f"Stress Type     : CPU")
-            print(f"Peak CPU Usage  : {peak_cpu} cores")
-            print(f"MTTR            : {mttr_cpu} seconds")
+            print(f"Peak CPU Usage  : {peak_val} cores")
+            print(f"MTTR            : {mttr_value} seconds")
 
-        # Memory Stress
         elif "memory" in args.chaos_name.lower() or "mem" in args.chaos_name.lower():
-            mttr_mem, peak_mem = get_memory_stress_mttr(
+            mttr_value, peak_val = get_memory_stress_mttr(
                 pod_prefix=args.downstream_service,
                 fault_start=fault_start,
                 observation_end=observation_end,
             )
             print(f"Stress Type     : Memory")
-            print(f"Peak Memory     : {peak_mem} MB")
-            print(f"MTTR            : {mttr_mem} seconds")
+            print(f"Peak Memory     : {peak_val} MB")
+            print(f"MTTR            : {mttr_value} seconds")
 
-    # 3. Latency MTTR (NetworkChaos / HTTP Chaos)
+    # 3. Latency MTTR
     elif args.downstream_service:
-        mttr_latency, baseline = get_latency_mttr(
+        mttr_value, baseline = get_latency_mttr(
             args.downstream_service, fault_start, observation_end
         )
-        print(f"\nLatency-based MTTR for dependency failure ({args.downstream_service})")
+        print(f"\nLatency-based MTTR ({args.downstream_service})")
         print("----------------------------")
         print(f"Baseline p99    : {baseline} ms")
-        print(f"MTTR            : {mttr_latency} seconds")
+        print(f"MTTR            : {mttr_value} seconds")
+
+    # --- Compute Availability, Burn Rate, and Resilience Score ---
+    service_to_check = args.downstream_service or args.target_component
+    if service_to_check:
+        avail = get_request_availability(service_to_check, fault_start, observation_end)
+        burn = calculate_burn_rate(availability_pct=avail, slo_target=0.99)
+        
+        score_details = compute_resilience_score(
+            availability_pct=avail,
+            mttr_seconds=mttr_value,
+            burn_rate=burn,
+            mttr_ceiling_sec=float(args.observation_window) # Setting 180s as acceptable upper ceiling
+        )
+
+        print(f"\nSRE Reliability & Resilience Score ({service_to_check})")
+        print("==========================================")
+        print(f"Request Availability : {avail}%  (Score: {score_details['availability_score']}/100)")
+        print(f"Burn Rate            : {burn}x    (Score: {score_details['burn_rate_score']}/100)")
+        print(f"MTTR Score           : {mttr_value}s (Score: {score_details['mttr_score']}/100)")
+        print("------------------------------------------")
+        print(f"FINAL RESILIENCE SCORE: {score_details['final_resilience_score']} / 100")
+        print("==========================================")
 
 
 if __name__ == "__main__":

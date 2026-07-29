@@ -123,3 +123,49 @@ def get_container_memory_series(pod_prefix: str, namespace: str, start: datetime
         parsed_series.append((float(t), val))
 
     return parsed_series
+
+def get_request_availability(service_name: str, start: datetime, end: datetime) -> float:
+    """
+    Computes Request-Based Availability (% successful requests) over the observation window
+    using OpenTelemetry span metrics.
+    """
+    duration_sec = int((end - start).total_seconds())
+    
+    # Query non-error calls vs total calls
+    success_query = (
+        f'sum(increase(traces_span_metrics_calls_total{{service_name="{service_name}", status_code!="STATUS_CODE_ERROR"}}[{duration_sec}s]))'
+    )
+    total_query = (
+        f'sum(increase(traces_span_metrics_calls_total{{service_name="{service_name}"}}[{duration_sec}s]))'
+    )
+
+    try:
+        # Fetch Total Calls
+        resp_total = requests.get(
+            f"{PROMETHEUS_URL}/api/v1/query",
+            params={"query": total_query, "time": end.timestamp()}
+        )
+        resp_total.raise_for_status()
+        res_total = resp_total.json()["data"]["result"]
+        
+        if not res_total or float(res_total[0]["value"][1]) == 0:
+            return 100.0  # Default to 100% if no traffic occurred
+
+        total_reqs = float(res_total[0]["value"][1])
+
+        # Fetch Successful Calls
+        resp_success = requests.get(
+            f"{PROMETHEUS_URL}/api/v1/query",
+            params={"query": success_query, "time": end.timestamp()}
+        )
+        resp_success.raise_for_status()
+        res_success = resp_success.json()["data"]["result"]
+        
+        success_reqs = float(res_success[0]["value"][1]) if res_success else 0.0
+
+        availability = (success_reqs / total_reqs) * 100.0
+        return round(availability, 2)
+
+    except Exception as e:
+        print(f"Warning: Could not query span metrics availability ({e}). Defaulting to 100.0%")
+        return 100.0
