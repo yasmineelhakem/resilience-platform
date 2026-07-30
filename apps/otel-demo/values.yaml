@@ -933,6 +933,8 @@ opentelemetry-collector:
     receivers:
       otlp:
         protocols:
+          grpc:
+            endpoint: 0.0.0.0:4317
           http:
             # Since this collector needs to receive data from the web, enable cors for all origins
             # `allowed_origins` can be refined for your deployment domain
