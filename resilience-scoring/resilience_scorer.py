@@ -12,7 +12,7 @@ from mttr import (
 )
 from metrics import get_request_availability
 from scorer import compute_resilience_score, calculate_burn_rate
-
+from exporter import setup_meter, push_resilience_metrics
 
 def main():
     parser = argparse.ArgumentParser()
@@ -100,7 +100,7 @@ def main():
         print(f"Baseline p99    : {baseline} ms")
         print(f"MTTR            : {mttr_value} seconds")
 
-    # --- Compute Availability, Burn Rate, and Resilience Score ---
+    # Compute Availability, Burn Rate, and Resilience Score 
     service_to_check = args.downstream_service or args.target_component
     if service_to_check:
         avail = get_request_availability(service_to_check, fault_start, observation_end)
@@ -110,7 +110,7 @@ def main():
             availability_pct=avail,
             mttr_seconds=mttr_value,
             burn_rate=burn,
-            mttr_ceiling_sec=float(args.observation_window) # Setting 180s as acceptable upper ceiling
+            mttr_ceiling_sec=float(args.observation_window) 
         )
 
         print(f"\nSRE Reliability & Resilience Score ({service_to_check})")
@@ -121,6 +121,34 @@ def main():
         print("------------------------------------------")
         print(f"FINAL RESILIENCE SCORE: {score_details['final_resilience_score']} / 100")
         print("==========================================")
+
+
+        if service_to_check:
+            # Compute availability and burn rate from Prometheus
+            avail_pct = get_request_availability(service_to_check, fault_start, observation_end)
+            burn_rate = calculate_burn_rate(availability_pct=avail_pct, slo_target=0.99)
+            
+            # Compute 0-100 scores
+            scores = compute_resilience_score(
+                availability_pct=avail_pct,
+                mttr_seconds=mttr_value,
+                burn_rate=burn_rate,
+                mttr_ceiling_sec=float(args.observation_window)
+            )
+
+            # Setup OpenTelemetry Meter
+            provider, meter = setup_meter()
+
+            # Export computed scores to OTel Collector -> Prometheus
+            push_resilience_metrics(
+                provider=provider,
+                meter=meter,
+                experiment_name=args.chaos_name,          
+                availability=scores["availability_score"], 
+                mttr_score=scores["mttr_score"],          
+                burn_score=scores["burn_rate_score"],      
+                final_score=scores["final_resilience_score"] 
+            )
 
 
 if __name__ == "__main__":
