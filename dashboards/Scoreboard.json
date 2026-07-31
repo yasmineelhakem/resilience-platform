@@ -34,19 +34,19 @@
           },
           "mappings": [],
           "thresholds": {
-            "mode": "percentage",
+            "mode": "absolute",
             "steps": [
               {
-                "color": "green",
+                "color": "dark-red",
                 "value": null
               },
               {
-                "color": "#EAB839",
-                "value": ""
+                "color": "dark-yellow",
+                "value": 60
               },
               {
-                "color": "red",
-                "value": 70
+                "color": "dark-green",
+                "value": 80
               }
             ]
           }
@@ -143,12 +143,12 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 0
+        "h": 9,
+        "w": 11,
+        "x": 0,
+        "y": 8
       },
-      "id": 2,
+      "id": 4,
       "options": {
         "barRadius": 0,
         "barWidth": 0.97,
@@ -167,20 +167,32 @@
           "mode": "single",
           "sort": "none"
         },
-        "xTickLabelRotation": 0,
+        "xField": "experiment",
+        "xTickLabelRotation": -45,
         "xTickLabelSpacing": 0
       },
       "pluginVersion": "11.4.0",
       "targets": [
         {
           "editorMode": "code",
-          "expr": "last_over_time(resilience_experiment_final_score_ratio[24h])",
-          "legendFormat": "{{experiment}}",
+          "expr": "last_over_time(resilience_experiment_mttr_score_ratio[7d])",
+          "legendFormat": "__auto",
           "range": true,
           "refId": "A"
         }
       ],
-      "title": "Experiment Comparison",
+      "title": "MTTR Score by Experiment",
+      "transformations": [
+        {
+          "id": "reduce",
+          "options": {
+            "labelsToFields": true,
+            "reducers": [
+              "max"
+            ]
+          }
+        }
+      ],
       "type": "barchart"
     },
     {
@@ -191,40 +203,96 @@
       "fieldConfig": {
         "defaults": {
           "color": {
-            "mode": "palette-classic"
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "dark-red",
+                "value": null
+              },
+              {
+                "color": "dark-yellow",
+                "value": 60
+              },
+              {
+                "color": "dark-green",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 11,
+        "x": 11,
+        "y": 8
+      },
+      "id": 2,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "horizontal",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.4.0",
+      "targets": [
+        {
+          "editorMode": "code",
+          "expr": "last_over_time(resilience_experiment_final_score_ratio[7d])",
+          "legendFormat": "{{experiment}}",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Final Resilience Score per Experiment",
+      "transformations": [
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": {},
+            "sort": [
+              {
+                "desc": false,
+                "field": "cartservice-pod-kill"
+              }
+            ]
+          }
+        }
+      ],
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
           },
           "custom": {
-            "axisBorderShow": false,
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "barWidthFactor": 0.6,
-            "drawStyle": "line",
-            "fillOpacity": 0,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
             },
-            "insertNulls": false,
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
+            "inspect": false
           },
           "mappings": [],
           "thresholds": {
@@ -241,33 +309,68 @@
             ]
           }
         },
-        "overrides": []
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Final Score"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-background"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "dark-red",
+                      "value": null
+                    },
+                    {
+                      "color": "dark-yellow",
+                      "value": ""
+                    },
+                    {
+                      "color": "dark-green",
+                      "value": 80
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
       },
       "gridPos": {
-        "h": 8,
-        "w": 12,
+        "h": 10,
+        "w": 24,
         "x": 0,
-        "y": 8
+        "y": 17
       },
       "id": 3,
       "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
         },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
+        "showHeader": true
       },
       "pluginVersion": "11.4.0",
       "targets": [
         {
           "editorMode": "code",
           "expr": "last_over_time(resilience_experiment_final_score_ratio[24h])",
-          "legendFormat": "{{__name__}} - {{experiment}}",
+          "legendFormat": "Final Score",
           "range": true,
           "refId": "A"
         },
@@ -280,7 +383,7 @@
           "expr": "last_over_time(resilience_experiment_availability_score_ratio[24h])",
           "hide": false,
           "instant": false,
-          "legendFormat": "{{__name__}} - {{experiment}}",
+          "legendFormat": "Availability Score",
           "range": true,
           "refId": "B"
         },
@@ -293,7 +396,7 @@
           "expr": "last_over_time(resilience_experiment_mttr_score_ratio[24h])",
           "hide": false,
           "instant": false,
-          "legendFormat": "{{__name__}} - {{experiment}}",
+          "legendFormat": "MTTR Score",
           "range": true,
           "refId": "C"
         },
@@ -306,13 +409,137 @@
           "expr": "last_over_time(resilience_experiment_burn_rate_score_ratio[24h])",
           "hide": false,
           "instant": false,
-          "legendFormat": "{{__name__}} - {{experiment}}",
+          "legendFormat": "Burn Rate Score",
           "range": true,
           "refId": "D"
         }
       ],
       "title": "Metric Breakdown Comparison",
-      "type": "timeseries"
+      "transformations": [
+        {
+          "id": "reduce",
+          "options": {
+            "labelsToFields": true,
+            "reducers": [
+              "max"
+            ]
+          }
+        },
+        {
+          "id": "joinByField",
+          "options": {
+            "byField": "experiment",
+            "mode": "outerTabular"
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Field": false,
+              "__name__": true,
+              "instance": true,
+              "job": true
+            },
+            "includeByName": {},
+            "indexByName": {},
+            "renameByName": {
+              "Max": "Final Score",
+              "experiment": "Experiment"
+            }
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "max": 100,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "dark-red",
+                "value": null
+              },
+              {
+                "color": "#EAB839",
+                "value": 60
+              },
+              {
+                "color": "dark-green",
+                "value": 90
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 27
+      },
+      "id": 5,
+      "options": {
+        "displayMode": "gradient",
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": false
+        },
+        "maxVizHeight": 300,
+        "minVizHeight": 16,
+        "minVizWidth": 8,
+        "namePlacement": "left",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showUnfilled": true,
+        "sizing": "auto",
+        "valueMode": "color"
+      },
+      "pluginVersion": "11.4.0",
+      "targets": [
+        {
+          "editorMode": "code",
+          "expr": "last_over_time(resilience_experiment_availability_score_ratio[7d])",
+          "format": "time_series",
+          "legendFormat": "{{experiment}}",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Availability Score by Experiment",
+      "transformations": [
+        {
+          "id": "reduce",
+          "options": {
+            "labelsToFields": true,
+            "reducers": [
+              "max"
+            ]
+          }
+        }
+      ],
+      "type": "bargauge"
     }
   ],
   "preload": false,
@@ -327,8 +554,8 @@
   },
   "timepicker": {},
   "timezone": "browser",
-  "title": "Scoreboard",
+  "title": "Resilience Assessment Results",
   "uid": "aftowht4f5jb4f",
-  "version": 1,
+  "version": 2,
   "weekStart": ""
 }
