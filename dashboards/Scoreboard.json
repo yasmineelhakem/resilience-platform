@@ -18,7 +18,7 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "id": 30,
+  "id": 3,
   "links": [],
   "panels": [
     {
@@ -102,6 +102,88 @@
       "fieldConfig": {
         "defaults": {
           "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "dark-red",
+                "value": null
+              },
+              {
+                "color": "dark-yellow",
+                "value": 60
+              },
+              {
+                "color": "dark-green",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 12,
+        "y": 0
+      },
+      "id": 2,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "horizontal",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.4.0",
+      "targets": [
+        {
+          "editorMode": "code",
+          "expr": "avg by (experiment) (last_over_time(resilience_experiment_final_score_ratio[7d]))",
+          "legendFormat": "{{experiment}}",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Final Resilience Score per Experiment",
+      "transformations": [
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": {},
+            "sort": [
+              {
+                "desc": false,
+                "field": "cartservice-pod-kill"
+              }
+            ]
+          }
+        }
+      ],
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
             "mode": "palette-classic"
           },
           "custom": {
@@ -144,7 +226,7 @@
       },
       "gridPos": {
         "h": 9,
-        "w": 11,
+        "w": 12,
         "x": 0,
         "y": 8
       },
@@ -175,7 +257,7 @@
       "targets": [
         {
           "editorMode": "code",
-          "expr": "last_over_time(resilience_experiment_mttr_score_ratio[7d])",
+          "expr": "avg by (experiment) (last_over_time(resilience_experiment_mttr_score_ratio[7d]))",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
@@ -194,88 +276,6 @@
         }
       ],
       "type": "barchart"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "dark-red",
-                "value": null
-              },
-              {
-                "color": "dark-yellow",
-                "value": 60
-              },
-              {
-                "color": "dark-green",
-                "value": 80
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 9,
-        "w": 11,
-        "x": 11,
-        "y": 8
-      },
-      "id": 2,
-      "options": {
-        "colorMode": "background",
-        "graphMode": "none",
-        "justifyMode": "auto",
-        "orientation": "horizontal",
-        "percentChangeColorMode": "standard",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "showPercentChange": false,
-        "textMode": "auto",
-        "wideLayout": true
-      },
-      "pluginVersion": "11.4.0",
-      "targets": [
-        {
-          "editorMode": "code",
-          "expr": "last_over_time(resilience_experiment_final_score_ratio[7d])",
-          "legendFormat": "{{experiment}}",
-          "range": true,
-          "refId": "A"
-        }
-      ],
-      "title": "Final Resilience Score per Experiment",
-      "transformations": [
-        {
-          "id": "sortBy",
-          "options": {
-            "fields": {},
-            "sort": [
-              {
-                "desc": false,
-                "field": "cartservice-pod-kill"
-              }
-            ]
-          }
-        }
-      ],
-      "type": "stat"
     },
     {
       "datasource": {
@@ -347,7 +347,7 @@
         ]
       },
       "gridPos": {
-        "h": 10,
+        "h": 16,
         "w": 24,
         "x": 0,
         "y": 17
@@ -369,7 +369,7 @@
       "targets": [
         {
           "editorMode": "code",
-          "expr": "last_over_time(resilience_experiment_final_score_ratio[24h])",
+          "expr": "avg by (experiment) (last_over_time(resilience_experiment_final_score_ratio[24h]))",
           "legendFormat": "Final Score",
           "range": true,
           "refId": "A"
@@ -380,7 +380,7 @@
             "uid": "prometheus"
           },
           "editorMode": "code",
-          "expr": "last_over_time(resilience_experiment_availability_score_ratio[24h])",
+          "expr": "avg by (experiment)(last_over_time(resilience_experiment_availability_score_ratio[24h]))",
           "hide": false,
           "instant": false,
           "legendFormat": "Availability Score",
@@ -393,7 +393,7 @@
             "uid": "prometheus"
           },
           "editorMode": "code",
-          "expr": "last_over_time(resilience_experiment_mttr_score_ratio[24h])",
+          "expr": "avg by (experiment)(last_over_time(resilience_experiment_mttr_score_ratio[24h]))",
           "hide": false,
           "instant": false,
           "legendFormat": "MTTR Score",
@@ -406,7 +406,7 @@
             "uid": "prometheus"
           },
           "editorMode": "code",
-          "expr": "last_over_time(resilience_experiment_burn_rate_score_ratio[24h])",
+          "expr": "avg by (experiment)(last_over_time(resilience_experiment_burn_rate_score_ratio[24h]))",
           "hide": false,
           "instant": false,
           "legendFormat": "Burn Rate Score",
@@ -436,7 +436,7 @@
           "id": "organize",
           "options": {
             "excludeByName": {
-              "Field": false,
+              "Field": true,
               "__name__": true,
               "instance": true,
               "job": true
@@ -444,6 +444,7 @@
             "includeByName": {},
             "indexByName": {},
             "renameByName": {
+              "Field": "",
               "Max": "Final Score",
               "experiment": "Experiment"
             }
@@ -489,7 +490,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 27
+        "y": 33
       },
       "id": 5,
       "options": {
@@ -556,6 +557,6 @@
   "timezone": "browser",
   "title": "Resilience Assessment Results",
   "uid": "aftowht4f5jb4f",
-  "version": 2,
+  "version": 1,
   "weekStart": ""
 }
