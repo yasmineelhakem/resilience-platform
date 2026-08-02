@@ -53,7 +53,7 @@ grafana:
   additionalDataSources:
     - name: Jaeger
       type: jaeger
-      url: http://otel-demo-jaeger-query.otel-demo.svc.cluster.local:16686
+      url: http://jaeger.otel-demo.svc.cluster.local:16686/jaeger/ui
       access: proxy
       isDefault: false
 
