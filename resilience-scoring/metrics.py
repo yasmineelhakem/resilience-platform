@@ -124,6 +124,9 @@ def get_container_memory_series(pod_prefix: str, namespace: str, start: datetime
 
     return parsed_series
 
+
+
+# To delete
 def get_request_availability(service_name: str, start: datetime, end: datetime) -> float:
     """
     Computes Request-Based Availability (% successful requests) over the observation window
