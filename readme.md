@@ -88,8 +88,8 @@ Each experiment is evaluated over a fixed observation window (default 300 second
 - **Availability**: proportion of successful requests during the experiment.
 - **MTTR**: how quickly the affected component or metric returns to an acceptable state; the recovery condition depends on the failure type (pod readiness, latency, CPU/memory usage).
 - **Error-budget burn rate**: how fast the observed unreliability consumes the error budget defined by a 99% SLO.
-The final score is a weighted sum: 35% availability, 35% MTTR, 30% burn rate, favoring service continuity and recovery speed equally, with burn rate as a complementary SRE-oriented signal. Full formulas are in the internship report linked below.
- 
+
+The final score is a weighted sum: 35% availability, 35% MTTR, 30% burn rate, favoring service continuity and recovery speed equally, with burn rate as a complementary SRE-oriented signal.
 ## Dashboards
  
 Three Grafana dashboards, defined in `dashboards/`, support the resilience assessment at different stages.
@@ -117,7 +117,9 @@ Six chaos experiments were run against the target application, producing an **ov
 
 ![Resilience scoreboard](images/results.png)
  
-Pod failures scored highest, since Kubernetes' self-healing recreates terminated pods quickly. Network disruptions and resource exhaustion scored lower, the application stays technically available, but latency and recovery time degrade more, which availability alone would not capture.
+Pod failures scored highest, since Kubernetes' self-healing recreates terminated pods quickly. 
+
+Network disruptions and resource exhaustion scored lower, the application stays technically available, but latency and recovery time degrade more, which availability alone would not capture.
  
 ---
 
